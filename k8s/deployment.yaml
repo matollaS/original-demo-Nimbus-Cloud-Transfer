@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nimbus-db-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nimbus-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nimbus
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: nimbus
+        tier: web
+    spec:
+      containers:
+        - name: nimbus-web
+          image: nimbus-cloud-transfer:latest
+          imagePullPolicy: Never
+          env:
+            - name: ROLE
+              value: "web"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: db-volume
+              mountPath: /app/nimbus.db
+              subPath: nimbus.db
+      volumes:
+        - name: db-volume
+          persistentVolumeClaim:
+            claimName: nimbus-db-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nimbus-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nimbus
+      tier: worker
+  template:
+    metadata:
+      labels:
+        app: nimbus
+        tier: worker
+    spec:
+      containers:
+        - name: nimbus-worker
+          image: nimbus-cloud-transfer:latest
+          imagePullPolicy: Never
+          env:
+            - name: ROLE
+              value: "worker"
+          volumeMounts:
+            - name: db-volume
+              mountPath: /app/nimbus.db
+              subPath: nimbus.db
+      volumes:
+        - name: db-volume
+          persistentVolumeClaim:
+            claimName: nimbus-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nimbus-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: nimbus
+    tier: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

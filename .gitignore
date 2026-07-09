@@ -1,0 +1,4 @@
+.env
+nimbus.db
+php/php.ini
+*.log

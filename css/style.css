@@ -1,0 +1,39 @@
+		* {
+			padding: 0; margin: 0;
+		}
+		
+		.body {
+			height: 100%;
+			background: url("http://lapp-effort.000webhostapp.com/beta/nctBackground.jpg");
+				/*url("");
+				/*url("file:///media/demo/USB-DATA/public_html/tmp/nctBackground.jpg") */
+				/*url("https://pixabay.com/get/50e9d5414351b108feda8460c6203778143bd7e34e507749742a7cd5904acd_1920.jpg")
+				repeat;*/
+			background-repeat: no-repeat;
+			color: #fff;
+			font-family: Trebuchet MS,Lucida Grande,Lucida Sans Unicode,Lucida Sans,Tahoma,sans-serif;
+			font-size: 12px;
+		}
+			
+		.button {
+			border-radius: 10px;
+			//text-align: center;
+			font-size: 12px;
+			width: 100px;
+			height: 23px;
+			position: relative;
+		}
+		/*
+		button:hover {
+			background: #5c6961;
+		}
+		*/
+		a {
+			color: #698FB4;
+			outline:none;
+			text-decoration:none;
+		}
+			
+		a:hover {
+			text-decoration: underline;
+		}

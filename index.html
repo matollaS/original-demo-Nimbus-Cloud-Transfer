@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Nimbus Cloud Transfer</title>
+	
+	<!-- Bootstrap 5.3 CSS CDN -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
+</head>
+<body class="bg-body-tertiary d-flex flex-column min-vh-100">
+	
+	<!-- Header / Masthead -->
+	<div class="container-fluid text-center py-5 bg-white border-bottom shadow-sm">
+		<h1 class="display-4 fw-bold text-primary">Nimbus Cloud Transfer</h1>
+		<p class="lead text-muted">Upload files from the Internet directly to your Personal Cloud within minutes.</p>
+		
+		<div id="authButtons" class="mt-4">
+			<a href="auth.php?action=login" class="btn btn-primary btn-lg shadow-sm">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16">
+					<path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"/>
+				</svg>
+				Sign in with Google
+			</a>
+			<p class="text-success fw-bold mt-3" id="userNameDisplay" style="display: none;">Welcome back!</p>
+			<a href="auth.php?action=logout" id="logoutBtn" class="btn btn-sm btn-outline-danger mt-2" style="display: none;">Sign Out</a>
+		</div>
+		
+
+	</div>
+
+	<!-- Main Upload Area -->
+	<div class="container my-5 flex-grow-1">
+		
+		<div id="uploadForm" class="mx-auto card shadow-sm" style="max-width: 600px;">
+			<div class="card-body p-4">
+				<h4 class="card-title fw-bold border-bottom pb-2 mb-4">New Transfer</h4>
+				
+				<ul id="links" class="list-group mb-3"></ul>
+				
+				<div class="mb-3">
+					<textarea type="text" id="url" class="form-control bg-light" rows="3" 
+						data-bs-toggle="tooltip" data-bs-placement="top" title="Enter remote link(s) or folder."
+						placeholder="e.g. https://example.com/large-file.zip" spellcheck="false"></textarea>
+				</div>
+				
+				<div class="mb-4">
+					<button type="button" id="addBtn" class="btn btn-outline-primary w-100 fw-bold">Add Link(s)</button>
+				</div>
+				
+				<form id="cloudSelection" class="mb-4">
+					<h5 class="fw-bold mb-3"><span class="badge text-bg-secondary">Destination</span></h5>
+					<div class="list-group">
+						<label class="list-group-item list-group-item-action d-flex gap-2">
+							<input class="form-check-input flex-shrink-0" type="radio" name="cloud" value="gdrive">
+							<span>
+								<strong>Google Drive</strong>
+								<small class="d-block text-muted">Upload directly to the root of your connected drive.</small>
+							</span>
+						</label>
+						<label class="list-group-item list-group-item-action d-flex gap-2">
+							<input class="form-check-input flex-shrink-0" type="radio" name="cloud" value="dav">
+							<span>
+								<strong>WebDAV</strong>
+								<small class="d-block text-muted">Upload to standard remote storage protocols.</small>
+							</span>
+						</label>
+					</div>
+				</form>
+				
+				<div id="controls" style="display: none;">
+					<button id="backBtn" class="btn btn-sm btn-outline-secondary mb-3">← Change Destination</button>
+					
+					<div class="alert alert-info alert-dismissible fade show" role="alert" id="msg" style="display: none;">
+						<span id="alertMsg"></span>
+						<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+					</div>
+				</div>
+				
+				<div id="config" class="bg-light p-3 rounded border mb-3" style="display: none;">
+					<h5 class="fw-bold mb-3"><span class="badge text-bg-secondary">WebDAV Settings</span></h5>
+					<div class="mb-2">
+						<label for="driveDir" class="form-label small fw-bold">Drive Link:</label>
+						<input name="driveDir" class="form-control form-control-sm" placeholder="e.g 192.168.136.200/webdav">
+					</div>
+					<div class="mb-2">
+						<label for="user" class="form-label small fw-bold">Username:</label>
+						<input name="user" class="form-control form-control-sm" placeholder="username">
+					</div>
+					<div class="mb-2">
+						<label for="password" class="form-label small fw-bold">Password:</label>
+						<input type="password" class="form-control form-control-sm" name="password" placeholder="password">
+					</div>	
+					<div class="mb-3">
+						<label for="uploadDir" class="form-label small fw-bold">Upload Directory:</label>
+						<input name="uploadDir" class="form-control form-control-sm" value="Uploads/Nimbus/">
+					</div>
+					<button id="uploadBtn" class="btn btn-primary w-100 fw-bold" type="submit">Start WebDAV Transfer</button>
+				</div>
+
+				<div id="gdriveConfig" class="bg-light p-3 rounded border mb-3" style="display: none;">
+					<h5 class="fw-bold mb-2"><span class="badge text-bg-secondary">Google Drive Target</span></h5>
+					<p class="small text-muted mb-3">Files will be streamed automatically, bypassing local storage, directly into your Google Drive.</p>
+					<button id="uploadBtnGdrive" class="btn btn-success w-100 fw-bold" type="button">Start Google Drive Transfer</button>
+				</div>
+			</div>
+		</div>
+
+		
+		<!-- Analytics Dashboard -->
+		<div id="analyticsDashboard" class="mx-auto mb-4" style="max-width: 600px; display: none;">
+			<div class="row g-3">
+				<div class="col-6 col-md-4">
+					<div class="card shadow-sm border-0 bg-primary text-white h-100">
+						<div class="card-body p-3 text-center">
+							<h6 class="card-title fw-bold mb-1">Success / Fail</h6>
+							<h4 class="mb-0 fw-bold" id="metric-success-fail">0 / 0</h4>
+						</div>
+					</div>
+				</div>
+				<div class="col-6 col-md-4">
+					<div class="card shadow-sm border-0 bg-info text-white h-100">
+						<div class="card-body p-3 text-center">
+							<h6 class="card-title fw-bold mb-1">Data Transfer</h6>
+							<h4 class="mb-0 fw-bold" id="metric-volume">0 GB</h4>
+						</div>
+					</div>
+				</div>
+				<div class="col-12 col-md-4">
+					<div class="card shadow-sm border-0 bg-secondary text-white h-100">
+						<div class="card-body p-3 text-center">
+							<h6 class="card-title fw-bold mb-1">Total Files</h6>
+							<h4 class="mb-0 fw-bold" id="metric-total-files">0</h4>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Progress Area -->
+		<div id="transfers" class="mx-auto card shadow-sm" style="max-width: 600px; display: none;">
+			<div class="card-body p-4">
+				<h4 class="card-title fw-bold border-bottom pb-2 mb-4">Active Transfers</h4>
+				<div id="response"></div>
+				<div id="uploads" class="d-flex flex-column gap-3"></div>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- Error Log Modal -->
+	<div class="modal fade" id="errorLogModal" tabindex="-1" aria-labelledby="errorLogModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header text-bg-danger">
+	        <h5 class="modal-title" id="errorLogModalLabel">Transfer Error Log</h5>
+	        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+	      </div>
+	      <div class="modal-body">
+	        <p class="mb-2 fw-bold">File: <span id="errorLogFileName" class="fw-normal"></span></p>
+	        <div class="p-3 bg-dark text-light font-monospace rounded small" id="errorLogMessage" style="word-break: break-all;"></div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- Extensible Architecture Section -->
+	<div class="container-fluid bg-dark text-white py-5 mt-auto">
+		<div class="container">
+			<div class="row text-center mb-5">
+				<div class="col-md-8 mx-auto">
+					<h2 class="fw-bold">Truly Extensible Architecture</h2>
+					<p class="lead text-light">Nimbus Cloud Transfer is built for universality, utilizing a pure, loosely coupled API design.</p>
+				</div>
+			</div>
+			<div class="row text-center">
+				<div class="col-md-4 mb-4">
+					<h4 class="fw-bold text-primary">PHP Native Core</h4>
+					<p class="text-light opacity-75">Out of the box, Nimbus runs strictly on standard PHP and SQLite. Deploy it on any cPanel or shared host immediately without SSH access.</p>
+				</div>
+				<div class="col-md-4 mb-4">
+					<h4 class="fw-bold text-success">Node.js Plug-and-Play</h4>
+					<p class="text-light opacity-75">Need high-performance WebSocket workers instead of PHP daemon loops? The frontend API is agnostic. You can swap out the backend processor for a Node.js daemon without touching the UI.</p>
+				</div>
+				<div class="col-md-4 mb-4">
+					<h4 class="fw-bold text-info">100% Open Source</h4>
+					<p class="text-light opacity-75">Nimbus is designed to be built upon. Extend the cloud providers, modify the authentication gateways, or customize the Bootstrap 5 DOM.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Footer -->
+	<footer class="bg-dark text-white-50 py-4 border-top border-secondary">
+		<div class="container text-center">
+			<p class="mb-1"><strong>Open Source Project</strong> &copy; 2026. Built with modern Bootstrap 5.</p>
+			<p class="mb-0">
+				<a href="https://github.com/matollaS/original-demo-Nimbus-Cloud-Transfer" class="text-white text-decoration-none mx-2" target="_blank">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github mb-1 me-1" viewBox="0 0 16 16">
+						<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+					</svg>
+					Contribute on GitHub
+				</a> | 
+				<a href="https://www.linkedin.com/in/sergio-matolla-37921899/" class="text-white text-decoration-none mx-2" target="_blank">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-linkedin mb-1 me-1" viewBox="0 0 16 16">
+					  <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/>
+					</svg>
+					LinkedIn
+				</a> | 
+				<a href="https://twitter.com/MatollaSergio" class="text-white text-decoration-none mx-2" target="_blank">Twitter</a>
+			</p>
+		</div>
+	</footer>
+	
+	<!-- Bootstrap 5.3 JS Bundle -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script src="js/main.js?v=2"></script>
+</body>
+</html>
